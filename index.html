@@ -108,9 +108,15 @@
             justify-content: space-between;
             align-items: center;
             border: 0.5px solid rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .category-item:active {
+            background: #14161C;
         }
         .category-info {
             flex: 1;
+            pointer-events: none;
         }
         .category-name {
             font-weight: 590;
@@ -156,6 +162,7 @@
             gap: 12px;
             align-items: center;
             margin-left: 10px;
+            pointer-events: auto;
         }
         .icon-btn {
             background: none;
@@ -754,6 +761,30 @@
         return true;
     }
 
+    function openFormWithCategory(categoryId) {
+        // Разворачиваем форму, если свёрнута
+        if (isFormCollapsed) {
+            isFormCollapsed = false;
+            formArea.classList.remove('collapsed');
+            persistToStorage();
+        }
+        // Устанавливаем выбранную категорию в select
+        if (categorySelect.querySelector(`option[value="${categoryId}"]`)) {
+            categorySelect.value = categoryId;
+        } else {
+            // Если категория не найдена (например, удалена), ничего не делаем
+            return;
+        }
+        // Скрываем поле создания новой категории, если оно было открыто
+        newCategoryRow.style.display = 'none';
+        // Фокусируем поле ввода суммы
+        amountInput.focus();
+    }
+
+    function handleCategoryClick(categoryId) {
+        openFormWithCategory(categoryId);
+    }
+
     function handleIncome() {
         let amount = parseAmount(amountInput.value);
         const selectedVal = categorySelect.value;
@@ -930,11 +961,30 @@
             `;
         }
         categoryListEl.innerHTML = html;
+        
+        // Обработчики для кнопок редактирования/удаления
         document.querySelectorAll('.edit-cat').forEach(btn => {
-            btn.addEventListener('click', (e) => { e.stopPropagation(); editCategory(parseInt(btn.dataset.id)); });
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editCategory(parseInt(btn.dataset.id));
+            });
         });
         document.querySelectorAll('.delete-cat').forEach(btn => {
-            btn.addEventListener('click', (e) => { e.stopPropagation(); deleteCategory(parseInt(btn.dataset.id)); });
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteCategory(parseInt(btn.dataset.id));
+            });
+        });
+        
+        // Обработчик клика по самой категории (открыть форму с этой категорией)
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Если клик был по кнопкам, они уже обработаны и остановили всплытие
+                const catId = parseInt(item.dataset.id);
+                if (!isNaN(catId)) {
+                    openFormWithCategory(catId);
+                }
+            });
         });
     }
 
